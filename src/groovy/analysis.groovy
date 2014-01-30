@@ -13,30 +13,59 @@ import groovyx.net.http.ContentType
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import org.apache.http.HttpResponse
+import org.apache.http.HttpResponseInterceptor
 import org.apache.http.impl.client.BasicCookieStore
+import org.apache.http.protocol.HttpContext
 import org.apache.log4j.Logger
 import org.apache.log4j.PropertyConfigurator
 
 
 if (args.length < 1) {
-	println "Usage analysis.groovy <params_filepath>"
+	println "Usage analysis.groovy <params_filepath> [server root url]"
 	return 1
 }
 
 //already the default
 //PropertyConfigurator.configure('log4j.properties')
 
-def tsServer = 'http://localhost:8080/'
-def ctx = 'transmart'
+def tsServer = (args as List)[1] ?: 'http://localhost:8080/'
+def ctx      = 'transmart'
 
-def err = System.err.&println
-def cookieStore = new BasicCookieStore()
+/* if no auto login */
+def user     = 'admin'
+def password = 'admin'
+
+def err          = System.err.&println
+def cookieStore  = new BasicCookieStore()
+def lastRedirect = null
 
 def http = new HTTPBuilder(tsServer)
 http.client.cookieStore = cookieStore
+http.client.addResponseInterceptor({ HttpResponse response, HttpContext context ->
+    lastRedirect = response.getFirstHeader('Location')?.value ?: lastRedirect
+} as HttpResponseInterceptor)
+
 
 http.request(Method.GET) {
     uri.path = "$ctx/datasetExplorer/index"
+
+    response.success = { resp, json ->
+        if (lastRedirect?.contains('/login/auth')) {
+            http.request(Method.POST, ContentType.URLENC) {
+                uri.path = "$ctx/j_spring_security_check"
+                uri.query = [
+                        j_username: user,
+                        j_password: password
+                ]
+
+                response.success = { resp1, json1 ->
+                    assert lastRedirect != null && !lastRedirect.contains('/login/auth')
+                }
+            }
+        } else {
+            assert resp.statusLine.statusCode == 200
+        }
+    }
 }
 if (cookieStore.cookies[0].name != 'JSESSIONID') {
     err 'Failed getting JSESSIONID'
