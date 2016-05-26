@@ -9,12 +9,13 @@ import pages.BrowsePage
  */
 
 // The tranSMART Foundation CI testing site
-baseUrl = 'http://75.124.74.46:5880/transmart/'
+//baseUrl = 'http://75.124.74.46:5880/transmart/'
 
 // for local testing set here or use -Pfirefoxlocal below
-//baseUrl = 'http://localhost:8080/transmart/'
+baseUrl = 'http://localhost:8080/transmart/'
 
 reports = 'build/geb-reports'
+autoClearCookies = false
 
 def instantiateDriver(String className) {
     def driverInstance = Class.forName(className).newInstance(profile)

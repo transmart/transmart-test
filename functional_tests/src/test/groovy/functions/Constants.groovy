@@ -16,4 +16,5 @@ class Constants {
     public static final Page LANDING_PAGE = new BrowsePage() // local configuration
 
     public static final String GSE8581_KEY = '\\\\Public Studies\\Public Studies\\GSE8581\\'
+    public static final String GSE4382_KEY = '\\\\Demo Data\\Demo Data\\Sorlie(2003) GSE4382\\'
 }

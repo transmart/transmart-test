@@ -18,7 +18,7 @@ class AnalyzePage extends Page {
     static url = 'datasetExplorer/index'
 
     static at = {
-        currentHeaderTab()?.text() == HEADER_TAB_NAME
+        waitFor { currentHeaderTab()?.text() == HEADER_TAB_NAME }
     }
 
     static content = {
@@ -64,6 +64,10 @@ class AnalyzePage extends Page {
         }
         analysisImages {
             $('#analysisOutput img')
+        }
+
+        smartRWorkflowDropdown {
+            $('select#scriptSelect')
         }
     }
 
@@ -118,6 +122,7 @@ class AnalyzePage extends Page {
     Navigator resultsTabs_Analysis () { panelCenter().find('div#resultsTabPanel__analysisPanel') }
     Navigator resultsTabs_AnalysisGrid () { panelCenter().find('div#resultsTabPanel__analysisGridPanel') }
     Navigator resultsTabs_DataAssociation () { panelCenter().find('div#resultsTabPanel__dataAssociationPanel') }
+    Navigator resultsTabs_SmartR () { panelCenter().find('div#resultsTabPanel__smartRPanel') }
     Navigator resultsTabs_DataExport () { panelCenter().find('div#resultsTabPanel__analysisDataExportPanel') }
     Navigator resultsTabs_ExportJobs () { panelCenter().find('div#resultsTabPanel__analysisExportJobsPanel') }
     Navigator resultsTabs_AnalysisJobs () { panelCenter().find('div#resultsTabPanel__analysisJobsPanel') }
@@ -133,6 +138,7 @@ class AnalyzePage extends Page {
     Navigator resultsTabsAnalysis () { panelCenter().find('div#analysisPanel') }
     Navigator resultsTabsAnalysisGrid () { panelCenter().find('div#analysisGridPanel') }
     Navigator resultsTabsDataAssociation () { panelCenter().find('div#dataAssociationPanel') }
+    Navigator resultsTabsSmartR () { panelCenter().find('div#smartRPanel') }
     Navigator resultsTabsAnalysisdataExport () { panelCenter().find('div#analysisDataExportPanel') }
     Navigator resultsTabsAnalysisExportJobs () { panelCenter().find('div#analysisExportJobsPanel') }
     Navigator resultsTabsAnalysisJobs () { panelCenter().find('div#analysisJobsPanel') }
@@ -204,5 +210,24 @@ class AnalyzePage extends Page {
         tabSeparator('Advanced Workflow').click()
         extButton('Analysis').click()
         menuItem(analysis).click()
+    }
+
+    void selectSmartRWorkflow(String workflow) {
+        tabSeparator('SmartR').click()
+        waitFor { smartRWorkflowDropdown }
+        smartRWorkflowDropdown.value(workflow)
+    }
+
+    boolean compareCurrentViewWith(refImg, threshold=0.95) {
+        browser.report('screenshot')
+        def sout = new StringBuffer()
+        def serr = new StringBuffer()
+        def proc = "compare -metric MAE ./src/test/groovy/tests/SmartRTests/resources/${refImg} ${browser.getReportGroupDir()}/screenshot.png /tmp/comparison.png".execute()
+        proc.consumeProcessOutput(sout, serr)
+        proc.waitForOrKill(1000)
+        println "out> $sout err> $serr"
+        def similarity = 1 - Float.parseFloat(serr.find(/\((.*?)\)/)[1..-2])
+        println "${refImg} image similarity: ${similarity * 100}%"
+        return  similarity > threshold
     }
 }
