@@ -24,12 +24,8 @@ class CooralationsAnalysisPage extends AnalyzePage {
 
         runButton { $('input.runAnalysisBtn') }
 
-        resultOutput { $('#analysisOutput form') }
+        resultOutput { $('div#analysisOutput') }
 
-        analysisHeaders { text ->
-            $('span.AnalysisHeader').any {
-                it.text() == text
-            }
-        }
+        analysisHeader { $('div#analysisOutput h2').text() }
     }
 }

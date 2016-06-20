@@ -27,18 +27,22 @@ public class CorrelationAnalysisTests extends CheckLoginPageAbstract{
     }
 
     private void verifyPage() {
-        def resultHeaders = ["Correlation Table (p-values on top right half, correlation coefficient on bottom left)"]
-        resultHeaders.each {
-            assert analysisHeaders(it)
-        }
+        def resultHeader = "Correlation Table (p-values on top right half, correlation coefficient on bottom left)"
 
+        println $('div#analysisOutput h2').size()
     }
 
     private void runAnalysis(Map params) {
 
-        dragNodeToBox params.variable1, variablesBox
-        dragNodeToBox params.variable2, variablesBox
-        dragNodeToBox params.variable3, variablesBox
+        def v1 = params.variable1
+        def v2 = params.variable2
+        def v3 = params.variable3
+        def v2Array = [v1,v2]
+        def v3Array = [v1,v2,v3]
+
+        dragNodeToBox v1, variablesBox
+        dragNodeToBox v2, variablesBox, containsInAnyOrder(v2Array.collect { is it as String })
+        dragNodeToBox v3, variablesBox, containsInAnyOrder(v3Array.collect { is it as String })
 
         runButton.click()
         waitFor(8, message: "SurvivalAnalysis RunButton.click() - timed out") { resultOutput } // wait up to 8 seconds for result
